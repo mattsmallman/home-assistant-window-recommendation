@@ -11,7 +11,7 @@ This blueprint recommends whether to open, close, or do nothing with a window ba
 `blueprints/automation/mattsmallman/window_recommendation.yaml`
 
 ## Import This Blueprint
-[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?repository_url=https://github.com/mattsmallman/home-assistant-window-recommendation&file=blueprints/automation/your_github_username/window_recommendation.yaml)
+[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?repository_url=https://github.com/mattsmallman/home-assistant-window-recommendation&file=blueprints/automation/mattsmallman/window_recommendation.yaml)
 
 ## Example Usage
 - Room temperature sensor: `sensor.bedroom_temperature`
