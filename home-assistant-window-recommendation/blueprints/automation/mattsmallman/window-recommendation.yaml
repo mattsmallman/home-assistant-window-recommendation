@@ -1,0 +1,89 @@
+blueprint:
+  name: Window Action Recommendation (Single Window, Comfort Threshold)
+  description: >
+    Recommends whether to open, close, or do nothing with a window based on indoor and outdoor temperature differences.
+    Only suggests opening windows if the outside temperature is above a user-defined comfort threshold.
+    Sends a notification when the recommendation changes.
+
+  domain: automation
+  input:
+    outside_temp_sensor:
+      name: Outside Temperature Sensor
+      selector:
+        entity:
+          domain: sensor
+
+    inside_temp_sensor:
+      name: Inside Temperature Sensor (Room Sensor)
+      selector:
+        entity:
+          domain: sensor
+
+    window_contact_sensor:
+      name: Window Contact Sensor
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: window
+
+    comfort_threshold:
+      name: Minimum Outside Comfort Temperature
+      description: "Do not recommend opening the window if the outside temperature is below this threshold."
+      default: 15
+      selector:
+        number:
+          min: -10
+          max: 30
+          step: 0.5
+          unit_of_measurement: "°C"
+
+    notify_device:
+      name: Notification Device
+      selector:
+        device:
+          integration: mobile_app
+
+variables:
+  outside_sensor: !input outside_temp_sensor
+  inside_sensor: !input inside_temp_sensor
+  window_sensor: !input window_contact_sensor
+  comfort_threshold: !input comfort_threshold
+
+trigger:
+  - platform: state
+    entity_id: !input outside_temp_sensor
+  - platform: state
+    entity_id: !input inside_temp_sensor
+  - platform: state
+    entity_id: !input window_contact_sensor
+
+condition: []
+
+action:
+  - variables:
+      outside_temp: "{{ states(outside_sensor) | float(0) }}"
+      inside_temp: "{{ states(inside_sensor) | float(0) }}"
+      window_open: "{{ is_state(window_sensor, 'on') }}"
+      temp_difference: "{{ (outside_temp - inside_temp) | abs }}"
+
+  - choose:
+      - conditions: >
+          {{ outside_temp >= comfort_threshold and outside_temp < inside_temp and not window_open and temp_difference >= 0.5 }}
+        sequence:
+          - service: notify.mobile_app_{{ device_attr(notify_device, 'name') | slugify }}
+            data:
+              message: "It's cooler outside than inside and above your comfort threshold. Recommended action: Open the window."
+
+      - conditions: >
+          {{ outside_temp > inside_temp and window_open and temp_difference >= 0.5 }}
+        sequence:
+          - service: notify.mobile_app_{{ device_attr(notify_device, 'name') | slugify }}
+            data:
+              message: "It's warmer outside than inside. Recommended action: Close the window."
+
+    default:
+      - service: notify.mobile_app_{{ device_attr(notify_device, 'name') | slugify }}
+        data:
+          message: "No action required. Recommended action: Do Nothing."
+
+mode: single
